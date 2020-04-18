@@ -29,7 +29,7 @@ lottery = w3.eth.contract(address=tx_receipt.contractAddress, abi=contract_inter
 @app.route('/')
 @app.route('/index')
 def hello():
-    return render_template('template.html', contractAddress = lottery.address.lower(), contractABI = json.dumps(contract_interface['abi']))
+    return render_template('index.html', contractAddress = lottery.address.lower(), contractABI = json.dumps(contract_interface['abi']))
 
 if __name__ == '__main__':
     app.run()
