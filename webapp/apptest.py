@@ -84,43 +84,68 @@ def foo_contract(eth_tester, w3):
     return lottery
 
 
-def test_initial_greeting(eth_tester,foo_contract):
+def test_owner(eth_tester,foo_contract):
     hw = foo_contract.caller.getOwner()
     # print(hw)
     assert hw == eth_tester.get_accounts()[0]
 
 
+def test_submit_headline(eth_tester, foo_contract,w3):
+    # send transaction that updates the greeting
+    # print(eth_tester.get_accounts()[1])
+    tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[1]})
+    w3.eth.waitForTransactionReceipt(tx_hash, 180)
+
+    # verify that the contract is now using the updated greeting
+    hw = foo_contract.caller.getCurrent()
+    # print(hw)
+    assert hw == "asdasd"
+
+def test_successful_vote_with_submitted_headline(eth_tester,w3, foo_contract):
+    # send transaction that votes
+    tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
+    w3.eth.waitForTransactionReceipt(tx_hash, 180)
+    tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[1],'value':w3.toWei(1, 'ether')})
+    receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
+
+    # get all of the `barred` logs for the contract
+    logs = foo_contract.events.Voted.getLogs()
+    assert len(logs) == 1
+
+    # verify that the log's data matches the expected value
+    event = logs[0]
+    assert event.blockHash == receipt.blockHash
+    # print(event.args)
+    assert event.args.voter == eth_tester.get_accounts()[1]
+    assert event.args.voted == True
 
 
+def test_failed_vote_because_no_submitted_headline(eth_tester,w3, foo_contract):
+    # send transaction that votes
+    with pytest.raises(Exception) as e_info: # THIS CHECKS IF CALL FAILS
+        tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[1],'value':w3.toWei(1, 'ether')})
+        receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
 
-# def test_can_update_greeting(w3, foo_contract):
-#     # send transaction that updates the greeting
-#     tx_hash = foo_contract.functions.setBar(
-#         "testing contracts is easy",
-#     ).transact({
-#         'from': w3.eth.accounts[1],
-#     })
-#     w3.eth.waitForTransactionReceipt(tx_hash, 180)
+        # get all of the `barred` logs for the contract
+        # logs = foo_contract.events.Voted.getLogs()
+        # assert len(logs) == 1
 
-#     # verify that the contract is now using the updated greeting
-#     hw = foo_contract.caller.bar()
-#     assert hw == "testing contracts is easy"
+        # # verify that the log's data matches the expected value
+        # event = logs[0]
+        # assert event.blockHash == receipt.blockHash
 
+def test_failed_vote_because_value_sent_is_less_than_required(eth_tester,w3, foo_contract):
+    with pytest.raises(Exception) as e_info:
+        tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
+        w3.eth.waitForTransactionReceipt(tx_hash, 180)
+        tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[1],'value':w3.toWei(0.001, 'ether')})
+        receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
 
-# def test_updating_greeting_emits_event(w3, foo_contract):
-#     # send transaction that updates the greeting
-#     tx_hash = foo_contract.functions.setBar(
-#         "testing contracts is easy",
-#     ).transact({
-#         'from': w3.eth.accounts[1],
-#     })
-#     receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
+        # # get all of the `barred` logs for the contract
+        # logs = foo_contract.events.Voted.getLogs()
+        # assert len(logs) == 1
 
-#     # get all of the `barred` logs for the contract
-#     logs = foo_contract.events.barred.getLogs()
-#     assert len(logs) == 1
-
-#     # verify that the log's data matches the expected value
-#     event = logs[0]
-#     assert event.blockHash == receipt.blockHash
-#     assert event.args._bar == "testing contracts is easy"
+        # # verify that the log's data matches the expected value
+        # event = logs[0]
+        # assert event.blockHash == receipt.blockHash
+    

@@ -21,6 +21,8 @@ contract Poll {
     mapping(address=>uint256) voter_balance;
     uint256 totalVotes;
     
+    event Voted(address voter,bool voted);
+    
     constructor() public{
         news_station = msg.sender;
     }
@@ -70,11 +72,12 @@ contract Poll {
     function getOwner() public view returns(address){
         return(news_station);
     }
-
+    
     function getDetails() public voterHasBalance returns(string,uint256,uint256) {
         voter_balance[msg.sender] -= 1;
         return(metadata[current_headline].body,metadata[current_headline].real_votes,metadata[current_headline].fake_votes);
     }
+    
     
     function submitHeadline(string _headline,string _body) public PollIsEmpty{
         require(bytes(_headline).length != 0 && bytes(_body).length!=0);
@@ -86,12 +89,10 @@ contract Poll {
         // real and fake votes already instantiated to 0
     }
     
-    event Voted(address,bool);
-    
-    
     
     function Vote(bool _choice) public payable NotPublisher {
         require(msg.value >= 0.01 ether);
+        require(bytes(current_headline).length!=0);
         if(_choice){
             metadata[current_headline].real_votes += 1;
         }
@@ -113,13 +114,12 @@ contract Poll {
     function reset_poll() internal {
         if((metadata[current_headline].real_votes/totalVotes) * 100 >= 60 ){
             real_headlines.push(current_headline);
-            metadata[current_headline].publisher_address.transfer(5 ether);
+            metadata[current_headline].publisher_address.transfer(2 ether);
         }
         
         delete current_headline;
         delete totalVotes;
         
     }
-    
     
 }
