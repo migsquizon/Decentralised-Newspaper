@@ -67,6 +67,10 @@ contract Poll {
         return(current_headline);
     }
     
+    function getOwner() public view returns(address){
+        return(news_station);
+    }
+
     function getDetails() public voterHasBalance returns(string,uint256,uint256) {
         voter_balance[msg.sender] -= 1;
         return(metadata[current_headline].body,metadata[current_headline].real_votes,metadata[current_headline].fake_votes);
