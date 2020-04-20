@@ -1,0 +1,171 @@
+<!DOCTYPE HTML>
+<!--
+	Photon by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Photon by HTML5 UP</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/main.css') }}" />
+		<noscript><link rel="stylesheet" href="{{ url_for('static',filename='assets/css/noscript.css') }}" /></noscript>
+		
+		<!-- Scripts -->
+			<script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/jquery.scrolly.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/browser.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/breakpoints.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/util.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+			        <script lang="javascript">
+            var contract;
+
+            $(document).ready(function() {
+                if (typeof web3 !== 'undefined') {
+                    var sc_address = "{{contractAddress}}";
+                    var contractABI = web3.eth.contract(JSON.parse('{{contractABI | safe}}'));
+                    var contractInstance = contractABI.at(sc_address);
+                    contract = contractInstance;
+
+
+
+                    contractInstance.getCurrentHeadline(function(error, result){
+                          if (error) {
+                              alert("Please, connect to the network");
+                              reject(error);
+                          } else {
+                              $("h2#debug").text(result);
+                          }
+                        });
+
+                    $("a#call_VoteReal").click(function(){
+                        contractInstance.Vote(true,{value:web3.toWei(0.2,'ether')},function(error, result){
+                          if (error) {
+                              alert("You are the publisher! or exception");
+                              reject(error);
+                          } else {
+                         
+                          }
+                        });
+                    });
+
+                     $("a#call_VoteFake").click(function(){
+                        contractInstance.Vote(false,{value:web3.toWei(0.2,'ether')},function(error, result){
+                          if (error) {
+                              alert("You are the publisher! or exception");
+                              reject(error);
+                          } else {
+        //                   	contractInstance.events.Details({filter: {myIndexedParam: [20,23], myOtherIndexedParam: '0x123456789...'}, fromBlock: 0}, function(error, event){ 
+        //                   		console.log(event); })
+								// .on('data', function(event){
+								//     console.log(event); // same results as the optional callback above
+								// })
+								// .on('changed', function(event){
+								//     // remove event from local database
+								// })
+								// .on('error', console.error);
+                          }
+                        });
+                    });  
+
+                     $("a#call_getDetails").click(function(){
+                     // 	var r;
+                     // 	var call_data = contractInstance.getCurrentNewsDetails(function(error, result){
+                     // 		if (error) {
+                     //          alert("You are the publisher! or exception");
+                     //          reject(error);
+                     //      } else {
+                     //      	r = result
+                     //      	console.log(r)
+                     //      	var encoded_output = web3.eth.call({'data': r},function(err, r1){
+                     // 		if(!err){
+                     // 			console.log(r1)
+                     // 		}
+
+                     // 	});
+                     // }
+                     // 	});
+
+                     });
+
+                     	// var res;
+                     	// web3.eth.call({'to': sc_address, 'data': call_data},function(err, result){
+                     	// 	if(!err){
+                     	// 		console.log(result);
+                     	// 		res = result;
+                     	// 		var output = web3.eth.abi.decodeParameters( ['string','uint256','uint256'] , res);
+                     	// 		console.log(output)
+                     	// 	}
+                     	// } );
+                    // });
+
+  //               	var tx_hash;
+       //                  contractInstance.getCurrentNewsDetails.sendTransaction({}, function(err, transactionHash) {
+  					// 		if (!err)
+    			// 			console.log(transactionHash);
+    			// 			tx_hash = transactionHash
+							// });
+       //                  web3.eth.getTransactionReceipt(tx_hash, function(err,txR) {
+       //                  	if(!err){
+							//   console.log(txR);
+       //                  	}
+							// });
+
+							
+
+                    $("a#call_totalvotes").click(function(){
+                        contractInstance.getTotalNumberOfNews(function(error, result){
+                          if (error) {
+                              alert("Please, connect to the network");
+                              reject(error);
+                          }
+                          else {
+                              $("h2#debug").text(result);
+                          }
+                        });
+                    });
+                }
+                else {
+                    alert("Please, install Metamask!");
+                }
+            });
+        </script>
+
+
+	</head>
+	<body class="is-preload">
+		
+			<section id="four" class="main style2 special">
+				<div class="container">
+					<header class="major">
+						<h2 id="debug"></h2>
+					</header>
+					<ul class="actions special">
+						<li><a href="#" id="call_VoteReal" class="button wide primary">REAL!!!</a></li>
+						<li><a href="#" id="call_VoteFake" class="button wide">FAKE!!!</a></li>
+						<li><a href="#" id="call_getDetails" class="button wide">Get Details</a></li>
+					</ul>
+				</div>
+			</section>
+
+	
+		<!-- Footer -->
+			<section id="footer">
+				<ul class="icons">
+					<li><a href="#" class="icon brands alt fa-twitter"><span class="label">Twitter</span></a></li>
+					<li><a href="#" class="icon brands alt fa-facebook-f"><span class="label">Facebook</span></a></li>
+					<li><a href="#" class="icon brands alt fa-instagram"><span class="label">Instagram</span></a></li>
+					<li><a href="#" class="icon brands alt fa-github"><span class="label">GitHub</span></a></li>
+					<li><a href="#" class="icon solid alt fa-envelope"><span class="label">Email</span></a></li>
+				</ul>
+				<ul class="copyright">
+					<li>&copy; Untitled</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+				</ul>
+			</section>
+
+	
+
+	</body>
+</html>

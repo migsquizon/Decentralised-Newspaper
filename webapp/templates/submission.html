@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<!--
+	Photon by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Photon by HTML5 UP</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/main.css') }}" />
+		<noscript><link rel="stylesheet" href="{{ url_for('static',filename='assets/css/noscript.css') }}" /></noscript>
+		
+		<!-- Scripts -->
+			<script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/jquery.scrolly.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/browser.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/breakpoints.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/util.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+			        <script lang="javascript">
+            var contract;
+
+            $(document).ready(function() {
+                if (typeof web3 !== 'undefined') {
+                    var sc_address = "{{contractAddress}}";
+                    var contractABI = web3.eth.contract(JSON.parse('{{contractABI | safe}}'));
+                    var contractInstance = contractABI.at(sc_address);
+                    contract = contractInstance;
+
+                    $("input#Submit").click(function(){
+                    	var headline = $("input#newsHeadline").val();
+                    	var body = $("textarea#newsBody").val();
+                    	console.log(headline)
+                    	console.log(body)
+                        contractInstance.submitHeadline(headline,body,function(error, result){
+                          if (error) {
+                              alert("Poll is not empty");
+                              reject(error);
+                          } else {
+                              location.href = "http://127.0.0.1:5000/home";
+                          }
+                        });
+                    }); 
+
+                     $("a#call_CurrentHeadline").click(function(){
+                        contractInstance.getCurrentHeadline(function(error, result){
+                          if (error) {
+                              alert("Please, connect to the network");
+                              reject(error);
+                          } else {
+                              $("h2#debug").text(result);
+                          }
+                        });
+                    });
+
+                    $("a#call_totalNews").click(function(){
+                        contractInstance.getTotalNumberOfNews(function(error, result){
+                          if (error) {
+                              alert("Please, connect to the network");
+                              reject(error);
+                          }
+                          else {
+                              $("h2#debug").text(result);
+                          }
+                        });
+                    });
+                }
+                else {
+                    alert("Please, install Metamask!");
+                }
+            });
+        </script>
+
+
+	</head>
+	<body class="is-preload">
+		
+			<section id="four" class="main style2 special">
+				<div class="container">
+					<header class="major">
+						<h2 id="debug">Submit News!</h2>
+						<ul class="actions special">
+						<li><a href="#" id="call_CurrentHeadline" class="button wide primary">headline</a></li>
+						<li><a href="#" id="call_totalNews" class="button wide">News Count</a></li>
+						<li><a href="#" id="call_getNumber" class="button wide">Get Number</a></li>
+					</ul>
+					</header>
+				</div>
+			</section>
+
+
+		<section id="five" class="main style1">
+					<div class="container">
+						<h4>Submission Form</h4>
+						<form>
+							<div class="row gtr-uniform gtr-50">
+								<div class="col-6 col-12-xsmall">
+									<input type="text" name="demo-name" id="newsHeadline" value="" placeholder="Headline" />
+								</div>
+								<div class="col-12">
+									<select name="demo-category" id="newscategory">
+										<option value="">- Category -</option>
+										<option value="1">Sports</option>
+										<option value="1">Finance</option>
+										<option value="1">Government</option>
+										<option value="1">Local</option>
+										<option value="1">International</option>
+									</select>
+								</div>
+								<div class="col-12">
+									<textarea name="demo-message" id="newsBody" placeholder="News Body/Description" rows="6"></textarea>
+								</div>
+								<div class="col-12">
+									<ul class="actions">
+										<li><input type="button" id="Submit" value="Submit for Polling!" class="primary" /></li>
+										<li><input type="reset" value="Reset" /></li>
+									</ul>
+								</div>
+							</div>
+						</form>
+					</div>
+			</section>
+
+
+		<!-- 	<section id="one" class="main style1">
+				<div class="container">
+					<div class="row gtr-150">
+						<div class="col-6 col-12-medium">
+						<input type="text" name="demo-name" id="headline" value="" placeholder="Headline" />
+						<input type="text" name="demo-name" id="body" value="" placeholder="Body" />
+						</div>
+						<div class="col-6 col-12-medium imp-medium">
+							<span class="image fit"><img src="{{ url_for('static',filename='images/pic01.jpg')}}" alt="" /></span>
+						</div>
+				</div>
+				</div>
+			</section>
+ -->
+
+	
+		<!-- Footer -->
+			<section id="footer">
+				<ul class="icons">
+					<li><a href="#" class="icon brands alt fa-twitter"><span class="label">Twitter</span></a></li>
+					<li><a href="#" class="icon brands alt fa-facebook-f"><span class="label">Facebook</span></a></li>
+					<li><a href="#" class="icon brands alt fa-instagram"><span class="label">Instagram</span></a></li>
+					<li><a href="#" class="icon brands alt fa-github"><span class="label">GitHub</span></a></li>
+					<li><a href="#" class="icon solid alt fa-envelope"><span class="label">Email</span></a></li>
+				</ul>
+				<ul class="copyright">
+					<li>&copy; Untitled</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+				</ul>
+			</section>
+
+	
+
+	</body>
+</html>
