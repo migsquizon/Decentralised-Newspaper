@@ -15,13 +15,15 @@ contract Poll {
     }
     
     address news_station;
-    string[] real_headlines;
+    uint256[] real_headlines;
     string current_headline;
-    mapping(string=>News) metadata;
+    uint256 indexOfNews;
+    mapping(uint256=>News) metadata;
     mapping(address=>uint256) voter_balance;
     uint256 totalVotes;
     
     event Voted(address voter,bool voted);
+    event Details(string body,uint256 real, uint256 fake, address pubisher);
     
     constructor() public{
         news_station = msg.sender;
@@ -48,7 +50,7 @@ contract Poll {
     }
     
     modifier NotPublisher(){
-        require(msg.sender != metadata[current_headline].publisher_address);
+        require(msg.sender != metadata[indexOfNews].publisher_address);
         _;
     }
     
@@ -60,31 +62,51 @@ contract Poll {
         news_station.transfer(address(this).balance);
     }
     
-    function getBalance() public view onlyOwner returns(uint256){
+    function getContractBalance() public view onlyOwner returns(uint256){
         return(address(this).balance);
     }
     
+    function getVoterBalance() public view returns(uint256){
+        return(voter_balance[msg.sender]);
+    }
     
-    function getCurrent() public view returns(string){
+    
+    function getCurrentHeadline() public view returns(string){
         return(current_headline);
+    }
+    
+    
+    function getHeadlineFromIndex(uint256 _index) public view returns(string){
+        return(metadata[_index].headline);
+    }
+    
+    function getTotalNumberOfNews() public view returns(uint256){
+        return(indexOfNews);
     }
     
     function getOwner() public view returns(address){
         return(news_station);
     }
     
-    function getDetails() public voterHasBalance returns(string,uint256,uint256) {
+    function getCurrentNewsDetails() public voterHasBalance returns(string,uint256,uint256) {
         voter_balance[msg.sender] -= 1;
-        return(metadata[current_headline].body,metadata[current_headline].real_votes,metadata[current_headline].fake_votes);
+        emit Details(metadata[indexOfNews].body,metadata[indexOfNews].real_votes,metadata[indexOfNews].fake_votes,metadata[indexOfNews].publisher_address);
+        return(metadata[indexOfNews].body,metadata[indexOfNews].real_votes,metadata[indexOfNews].fake_votes);
     }
     
+     function getSpecficNewsDetails(uint256 _index) public voterHasBalance returns(string,uint256,uint256) {
+        voter_balance[msg.sender] -= 1;
+        emit Details(metadata[_index].body,metadata[_index].real_votes,metadata[_index].fake_votes,metadata[_index].publisher_address);
+        return(metadata[indexOfNews].body,metadata[indexOfNews].real_votes,metadata[indexOfNews].fake_votes);
+    }
     
     function submitHeadline(string _headline,string _body) public PollIsEmpty{
         require(bytes(_headline).length != 0 && bytes(_body).length!=0);
-        
+        indexOfNews += 1;
         current_headline = _headline;
-        metadata[current_headline].body = _body;
-        metadata[current_headline].publisher_address = msg.sender;
+        metadata[indexOfNews].headline = current_headline;
+        metadata[indexOfNews].body = _body;
+        metadata[indexOfNews].publisher_address = msg.sender;
         // if(real_headlines.length)
         // real and fake votes already instantiated to 0
     }
@@ -94,13 +116,13 @@ contract Poll {
         require(msg.value >= 0.01 ether);
         require(bytes(current_headline).length!=0);
         if(_choice){
-            metadata[current_headline].real_votes += 1;
+            metadata[indexOfNews].real_votes += 1;
         }
         else{
-            metadata[current_headline].fake_votes += 1;
+            metadata[indexOfNews].fake_votes += 1;
         }
         voter_balance[msg.sender] += 1;
-        totalVotes = metadata[current_headline].real_votes + metadata[current_headline].fake_votes;
+        totalVotes = metadata[indexOfNews].real_votes + metadata[indexOfNews].fake_votes;
         
         // ensure that this guy has voted.
         emit Voted(msg.sender,true);
@@ -112,11 +134,12 @@ contract Poll {
     }
     
     function reset_poll() internal {
-        if((metadata[current_headline].real_votes/totalVotes) * 100 >= 60 ){
-            real_headlines.push(current_headline);
-            metadata[current_headline].publisher_address.transfer(2 ether);
+        if((metadata[indexOfNews].real_votes/totalVotes) * 100 >= 60 ){
+            real_headlines.push(indexOfNews);
+            metadata[indexOfNews].publisher_address.transfer(2 ether);
         }
         
+        // kind of compensates the gas cause they pay for reset
         delete current_headline;
         delete totalVotes;
         

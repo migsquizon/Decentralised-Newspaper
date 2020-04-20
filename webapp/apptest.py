@@ -24,28 +24,7 @@ def w3(tester_provider):
 
 @pytest.fixture
 def foo_contract(eth_tester, w3):
-    # For simplicity of this example we statically define the
-    # contract code here. You might read your contracts from a
-    # file, or something else to test with in your own code
-    #
-    # pragma solidity^0.5.3;
-    #
-    # contract Foo {
-    #
-    #     string public bar;
-    #     event barred(string _bar);
-    #
-    #     constructor() public {
-    #         bar = "hello world";
-    #     }
-    #
-    #     function setBar(string memory _bar) public {
-    #         bar = _bar;
-    #         emit barred(_bar);
-    #     }
-    #
-    # }
-
+   
     contract_source_code = None
     contract_source_code_file = 'Poll.sol'
 
@@ -86,66 +65,92 @@ def foo_contract(eth_tester, w3):
 
 def test_owner(eth_tester,foo_contract):
     hw = foo_contract.caller.getOwner()
-    # print(hw)
     assert hw == eth_tester.get_accounts()[0]
 
 
-def test_submit_headline(eth_tester, foo_contract,w3):
-    # send transaction that updates the greeting
-    # print(eth_tester.get_accounts()[1])
+def test_submit_headline_success(eth_tester, foo_contract,w3):
     tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[1]})
     w3.eth.waitForTransactionReceipt(tx_hash, 180)
 
-    # verify that the contract is now using the updated greeting
-    hw = foo_contract.caller.getCurrent()
-    # print(hw)
+    hw = foo_contract.caller.getCurrentHeadline()
     assert hw == "asdasd"
+
+def test_submit_headline_fail_cause_poll_is_ongoing(eth_tester, foo_contract,w3):
+    with pytest.raises(Exception) as e_info:
+        tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[1]})
+        w3.eth.waitForTransactionReceipt(tx_hash, 180)
+        tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[1]})
+        w3.eth.waitForTransactionReceipt(tx_hash, 180)
+
+        hw = foo_contract.caller.getCurrentHeadline()
+        assert hw == "asdasd"
+
+def test_submit_headline_fail_cause_empty_params(eth_tester, foo_contract,w3):
+    # print(eth_tester.get_accounts()[1])
+    with pytest.raises(Exception) as e_info:
+        tx_hash = foo_contract.functions.submitHeadline("","").transact({'from': eth_tester.get_accounts()[1]})
+        w3.eth.waitForTransactionReceipt(tx_hash, 180)
+
+def test_submit_headline_and_check_if_total_news_is_incremented(eth_tester, foo_contract,w3):
+    tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[1]})
+    w3.eth.waitForTransactionReceipt(tx_hash, 180)
+
+    hw = foo_contract.caller.getCurrentHeadline()
+    assert hw == "asdasd"
+    hw = foo_contract.caller.getTotalNumberOfNews()
+    assert hw == 1
 
 def test_successful_vote_with_submitted_headline(eth_tester,w3, foo_contract):
     # send transaction that votes
     tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
     w3.eth.waitForTransactionReceipt(tx_hash, 180)
+    hw = foo_contract.caller.getCurrentHeadline()
+    assert hw == "asdasd"
+
+
     tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[1],'value':w3.toWei(1, 'ether')})
     receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
 
-    # get all of the `barred` logs for the contract
     logs = foo_contract.events.Voted.getLogs()
     assert len(logs) == 1
-
-    # verify that the log's data matches the expected value
     event = logs[0]
     assert event.blockHash == receipt.blockHash
-    # print(event.args)
     assert event.args.voter == eth_tester.get_accounts()[1]
     assert event.args.voted == True
 
 
-def test_failed_vote_because_no_submitted_headline(eth_tester,w3, foo_contract):
+def test_failed_vote_because_poll_is_empty(eth_tester,w3, foo_contract):
     # send transaction that votes
     with pytest.raises(Exception) as e_info: # THIS CHECKS IF CALL FAILS
         tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[1],'value':w3.toWei(1, 'ether')})
         receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
 
-        # get all of the `barred` logs for the contract
-        # logs = foo_contract.events.Voted.getLogs()
-        # assert len(logs) == 1
 
-        # # verify that the log's data matches the expected value
-        # event = logs[0]
-        # assert event.blockHash == receipt.blockHash
-
-def test_failed_vote_because_value_sent_is_less_than_required(eth_tester,w3, foo_contract):
+def test_failed_vote_because_value_sent_is_less_than_fees_required(eth_tester,w3, foo_contract):
     with pytest.raises(Exception) as e_info:
         tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
         w3.eth.waitForTransactionReceipt(tx_hash, 180)
         tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[1],'value':w3.toWei(0.001, 'ether')})
         receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
 
-        # # get all of the `barred` logs for the contract
-        # logs = foo_contract.events.Voted.getLogs()
-        # assert len(logs) == 1
 
-        # # verify that the log's data matches the expected value
-        # event = logs[0]
-        # assert event.blockHash == receipt.blockHash
-    
+def test_successful_vote_and_that_is_rewarded_with_vote_balance(eth_tester,w3, foo_contract):
+    # send transaction that votes
+    tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
+    w3.eth.waitForTransactionReceipt(tx_hash, 180)
+    hw = foo_contract.caller.getCurrentHeadline()
+    assert hw == "asdasd"
+
+
+    tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[1],'value':w3.toWei(1, 'ether')})
+    receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
+    hw = foo_contract.functions.getVoterBalance().call({'from': eth_tester.get_accounts()[1]})
+    print(hw)
+    assert hw == 1
+
+    logs = foo_contract.events.Voted.getLogs()
+    assert len(logs) == 1
+    event = logs[0]
+    assert event.blockHash == receipt.blockHash
+    assert event.args.voter == eth_tester.get_accounts()[1]
+    assert event.args.voted == True
