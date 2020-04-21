@@ -13,14 +13,16 @@
 		<noscript><link rel="stylesheet" href="{{ url_for('static',filename='assets/css/noscript.css') }}" /></noscript>
 		
 		<!-- Scripts -->
+			<script src="{{ url_for('static', filename='assets/js/web3-eth-abi.js')}}"></script>
 			<script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
 			<script src="{{ url_for('static', filename='assets/js/jquery.scrolly.min.js') }}"></script>
 			<script src="{{ url_for('static', filename='assets/js/browser.min.js') }}"></script>
 			<script src="{{ url_for('static', filename='assets/js/breakpoints.min.js') }}"></script>
 			<script src="{{ url_for('static', filename='assets/js/util.js') }}"></script>
 			<script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
-			        <script lang="javascript">
+			<script lang="javascript">
             var contract;
+
 
             $(document).ready(function() {
                 if (typeof web3 !== 'undefined') {
@@ -28,6 +30,7 @@
                     var contractABI = web3.eth.contract(JSON.parse('{{contractABI | safe}}'));
                     var contractInstance = contractABI.at(sc_address);
                     contract = contractInstance;
+                    // console.log(typeof Web3EthAbi);
 
 
 
@@ -68,25 +71,53 @@
 								// .on('error', console.error);
                           }
                         });
-                    });  
+                    }); 
+
+
+                    function waitForReceipt(hash, cb) {
+						  web3.eth.getTransactionReceipt(hash, function (err, receipt) {
+						    if (err) {
+						      error(err);
+						    }
+
+						    if (receipt !== null) {
+						      // Transaction went through
+						      if (cb) {
+						        cb(receipt);
+						      }
+						    } else {
+						      // Try again in 1 second
+						      window.setTimeout(function () {
+						        waitForReceipt(hash, cb);
+						      }, 1000);
+						    }
+						  });
+						} 
 
                      $("a#call_getDetails").click(function(){
-                     // 	var r;
-                     // 	var call_data = contractInstance.getCurrentNewsDetails(function(error, result){
-                     // 		if (error) {
-                     //          alert("You are the publisher! or exception");
-                     //          reject(error);
-                     //      } else {
-                     //      	r = result
-                     //      	console.log(r)
-                     //      	var encoded_output = web3.eth.call({'data': r},function(err, r1){
-                     // 		if(!err){
-                     // 			console.log(r1)
-                     // 		}
+                     	var r;
+                     	var call_data = contractInstance.getCurrentNewsDetails(function(error, result){
+                     		if (error) {
+                              alert("You are the publisher! or exception");
+                              reject(error);
+                          } else {
+                          	r = result
+                          	console.log(r)
+                          	waitForReceipt(r, function (receipt){
+                          		console.log(receipt)
+                          		var log = receipt.logs[0]
+                          		var data = Web3EthAbi.decodeParameters(['string', 'uint256','uint256'], log.data.replace("0x", ""));
+                          		console.log(data)
 
-                     // 	});
-                     // }
-                     // 	});
+                          	});
+                      //     	var encoded_output = web3.eth.call({'data': r},function(err, r1){
+                     	// 	if(!err){
+                     	// 		console.log(r1)
+                     	// 	}
+
+                     	// });
+                     }
+                     	});
 
                      });
 
