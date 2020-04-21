@@ -97,7 +97,7 @@ contract Poll {
      function getSpecficNewsDetails(uint256 _index) public voterHasBalance returns(string,uint256,uint256) {
         voter_balance[msg.sender] -= 1;
         emit Details(metadata[_index].body,metadata[_index].real_votes,metadata[_index].fake_votes,metadata[_index].publisher_address);
-        return(metadata[indexOfNews].body,metadata[indexOfNews].real_votes,metadata[indexOfNews].fake_votes);
+        return(metadata[_index].body,metadata[_index].real_votes,metadata[_index].fake_votes);
     }
     
     function submitHeadline(string _headline,string _body) public PollIsEmpty{

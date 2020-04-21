@@ -32,6 +32,36 @@
                     contract = contractInstance;
                     // console.log(typeof Web3EthAbi);
 
+                    var voter_balance = 0;
+
+                   function asyncOp(resolve, reject) {
+                        //If you're using NodeJS you can use Es6 syntax:
+                        contractInstance.getVoterBalance(function(error, result){
+                          if(error) {
+                              alert("Please, connect to the network");
+                              reject(error); //You can reject the promise, this is optional.
+                          } else {
+                              //If your operation succeeds, resolve the promise and don't call again.
+                              if (result == voter_balance) {
+                                  asyncOp(resolve); //Try again
+                              } else {
+                                  resolve(result); //Resolve the promise, pass the result.
+                              }
+                          }
+                       });
+                    }
+                    new Promise((r, j) => { asyncOp(r, j);
+                    }).then((result) => {
+                      $("h4#voter_balance").text(result);
+                      // window.location.reload(false); 
+                        //This will call if your algorithm succeeds!
+                    });
+
+
+             
+
+
+
 
 
                     contractInstance.getCurrentHeadline(function(error, result){
@@ -44,7 +74,7 @@
                         });
 
                     $("a#call_VoteReal").click(function(){
-                        contractInstance.Vote(true,{value:web3.toWei(0.2,'ether')},function(error, result){
+                        contractInstance.Vote(true,{value:web3.toWei(1,'ether')},function(error, result){
                           if (error) {
                               alert("You are the publisher! or exception");
                               reject(error);
@@ -60,15 +90,7 @@
                               alert("You are the publisher! or exception");
                               reject(error);
                           } else {
-        //                   	contractInstance.events.Details({filter: {myIndexedParam: [20,23], myOtherIndexedParam: '0x123456789...'}, fromBlock: 0}, function(error, event){ 
-        //                   		console.log(event); })
-								// .on('data', function(event){
-								//     console.log(event); // same results as the optional callback above
-								// })
-								// .on('changed', function(event){
-								//     // remove event from local database
-								// })
-								// .on('error', console.error);
+    
                           }
                         });
                     }); 
@@ -106,20 +128,36 @@
                           	waitForReceipt(r, function (receipt){
                           		console.log(receipt)
                           		var log = receipt.logs[0]
-                          		var data = Web3EthAbi.decodeParameters(['string', 'uint256','uint256'], log.data.replace("0x", ""));
+                          		var data = Web3EthAbi.decodeParameters(['string','uint256','uint256'], log.data.replace("0x", ""));
                           		console.log(data)
-
+                          		$("p#body_paragraph").text(data['0']);
+                          		$("h4#real_votes").text(data['1']);
+                          		$("h4#fake_votes").text(data['2']);
+                  
                           	});
-                      //     	var encoded_output = web3.eth.call({'data': r},function(err, r1){
+               
+                     }
+                     	});
+
+                     });
+
+                            //     	var encoded_output = web3.eth.call({'data': r},function(err, r1){
                      	// 	if(!err){
                      	// 		console.log(r1)
                      	// 	}
 
                      	// });
-                     }
-                     	});
 
-                     });
+
+                         //                   	contractInstance.events.Details({filter: {myIndexedParam: [20,23], myOtherIndexedParam: '0x123456789...'}, fromBlock: 0}, function(error, event){ 
+        //                   		console.log(event); })
+								// .on('data', function(event){
+								//     console.log(event); // same results as the optional callback above
+								// })
+								// .on('changed', function(event){
+								//     // remove event from local database
+								// })
+								// .on('error', console.error);
 
                      	// var res;
                      	// web3.eth.call({'to': sc_address, 'data': call_data},function(err, result){
@@ -178,6 +216,41 @@
 						<li><a href="#" id="call_VoteFake" class="button wide">FAKE!!!</a></li>
 						<li><a href="#" id="call_getDetails" class="button wide">Get Details</a></li>
 					</ul>
+					<ul class="actions special">
+						<li><h3> Voter Balance: </h2></li>
+						<li><h4 id="voter_balance"></h4></li>
+
+					</ul>
+				</div>
+			</section>
+
+			<section id="two" class="main style1">
+				<div class="container">
+					<div class="row gtr-150">
+						<div class="col-6 col-12-medium">
+							<ul class="major-icons">
+								<li><span class="icon solid style1 major fa-code"></span></li>
+								<li><span class="icon solid style2 major fa-bolt"></span></li>
+								<li><span class="icon solid style3 major fa-camera-retro"></span></li>
+								<li><span class="icon solid style4 major fa-cog"></span></li>
+								<li><span class="icon solid style5 major fa-desktop"></span></li>
+								<li><span class="icon solid style6 major fa-calendar"></span></li>
+							</ul>
+						</div>
+						<div class="col-6 col-12-medium">
+							<header class="major">
+								<h2 id="current_headline">Pay to see details! (uses voter balance)</h2>
+							</header>
+							<ul class="actions special">
+							<li><h3>Total Real Votes: </h2></li>
+							<li><h4 id="real_votes"></h4></li>
+							<li><h3>Total Fake Votes: </h2></li>
+							<li><h4 id="fake_votes"></h4></li>
+							</ul>
+							<p id="body_paragraph">Adipiscing a commodo ante nunc accumsan interdum mi ante adipiscing. A nunc lobortis non nisl amet vis volutpat aclacus nascetur ac non. Lorem curae eu ante amet sapien in tempus ac. Adipiscing id accumsan adipiscing ipsum.</p>
+			
+						</div>
+					</div>
 				</div>
 			</section>
 
