@@ -32,7 +32,76 @@
                     contract = contractInstance;
                     // console.log(typeof Web3EthAbi);
 
+
+                      contractInstance.getOwner(function(error, result){
+                          if (error) {
+                              alert("Please, connect to the network");
+                              reject(error);
+                          } else {
+                            console.log(result)
+                            console.log(web3.eth.defaultAccount)
+                              // if its the owner, expose deposit and withdraw
+                              if(result != web3.eth.defaultAccount){
+                                var element = document.getElementById('call_deposit');
+                                element.parentNode.removeChild(element)
+                               var element = document.getElementById('call_withdraw');
+                                element.parentNode.removeChild(element)
+                                 var element = document.getElementById('call_getBalance');
+                                element.parentNode.removeChild(element)
+                                 var element = document.getElementById('deposit_value');
+                                element.parentNode.removeChild(element)
+                              }
+                              else{
+                           
+                              }
+                          }
+                        });
+
+
+                      $("a#call_deposit").click(function(){
+                        var deposit_value = $("input#deposit_value").val();
+                        contractInstance.deposit({value:web3.toWei(deposit_value,'ether')},function(error, result){
+                          if (error) {
+                              alert("You are the publisher! or exception");
+                              reject(error);
+                          } else {
+                         
+                          }
+                        });
+                    });
+
+                      $("a#call_withdraw").click(function(){
+                        contractInstance.withdraw(function(error, result){
+                          if (error) {
+                              alert("You are the publisher! or exception");
+                              reject(error);
+                          } else {
+                              console.log('withdraw success')
+                          }
+                        });
+                    });
+
+                       $("a#call_getBalance").click(function(){
+                        contractInstance.getContractBalance(function(error, result){
+                          if (error) {
+                              alert("You are the publisher! or exception");
+                              reject(error);
+                          } else {
+                              $("h2#contract_balance").text(result);
+                          }
+                        });
+                    });
+
                     var voter_balance = 0;
+                    // contractInstance.getVoterBalance(function(error, result){
+                    //       if(error) {
+                    //           alert("Please, connect to the network");
+                    //           reject(error);
+                    //       } else {
+                    //         voter_balance =result
+                    //         $("h4#voter_balance").text(result);
+                    //       }
+                    //     });
 
                    function asyncOp(resolve, reject) {
                         //If you're using NodeJS you can use Es6 syntax:
@@ -130,7 +199,10 @@
                           		var log = receipt.logs[0]
                           		var data = Web3EthAbi.decodeParameters(['string','uint256','uint256'], log.data.replace("0x", ""));
                           		console.log(data)
-                          		$("p#body_paragraph").text(data['0']);
+                              var myString = data['0'];
+                              console.log(myString)
+                              myString = myString.replace(/(\r\n|\n|\r)/gm, "<br />");
+                          		$("p#body_paragraph").html(myString);
                           		$("h4#real_votes").text(data['1']);
                           		$("h4#fake_votes").text(data['2']);
                   
@@ -219,8 +291,16 @@
 					<ul class="actions special">
 						<li><h3> Voter Balance: </h2></li>
 						<li><h4 id="voter_balance"></h4></li>
-
 					</ul>
+          <ul class="actions special">
+            <li><a href="#" id="call_deposit" class="button wide primary">Deposit</a></li>
+            <a></a>
+            <input type="text" name="demo-name" id="deposit_value" value="" placeholder="Deposit Value" />
+            <li><a href="#" id="call_withdraw" class="button wide">Withdraw</a></li>
+            <li><a href="#" id="call_getBalance" class="button wide">Get Balance</a></li>
+            <li><h2 id="contract_balance"></h2></li>
+
+          </ul>
 				</div>
 			</section>
 
