@@ -30,8 +30,9 @@
                     var contractABI = web3.eth.contract(JSON.parse('{{contractABI | safe}}'));
                     var contractInstance = contractABI.at(sc_address);
                     contract = contractInstance;
-                    // console.log(typeof Web3EthAbi);
+                
 
+                    // OWNER FUNCTIONS ////
 
                       contractInstance.getOwner(function(error, result){
                           if (error) {
@@ -103,27 +104,38 @@
                     //       }
                     //     });
 
-                   function asyncOp(resolve, reject) {
-                        //If you're using NodeJS you can use Es6 syntax:
+                   // function asyncOp(resolve, reject) {
+                   //      //If you're using NodeJS you can use Es6 syntax:
+                   //      contractInstance.getVoterBalance(function(error, result){
+                   //        if(error) {
+                   //            alert("Please, connect to the network");
+                   //            reject(error); //You can reject the promise, this is optional.
+                   //        } else {
+                   //            //If your operation succeeds, resolve the promise and don't call again.
+                   //            if (result == voter_balance) {
+                   //                asyncOp(resolve); //Try again
+                   //            } else {
+                   //                resolve(result); //Resolve the promise, pass the result.
+                   //            }
+                   //        }
+                   //     });
+                   //  }
+                   //  new Promise((r, j) => { asyncOp(r, j);
+                   //  }).then((result) => {
+                   //    $("h4#voter_balance").text(result);
+                   //    // window.location.reload(false); 
+                   //      //This will call if your algorithm succeeds!
+                   //  });
+                    $("a#call_RefreshBalance").click(function(){
                         contractInstance.getVoterBalance(function(error, result){
-                          if(error) {
-                              alert("Please, connect to the network");
-                              reject(error); //You can reject the promise, this is optional.
+                          if (error) {
+                              alert("You are the publisher! or exception");
+                              reject(error);
                           } else {
-                              //If your operation succeeds, resolve the promise and don't call again.
-                              if (result == voter_balance) {
-                                  asyncOp(resolve); //Try again
-                              } else {
-                                  resolve(result); //Resolve the promise, pass the result.
-                              }
+                            $("h4#voter_balance").text(result);
+                         
                           }
-                       });
-                    }
-                    new Promise((r, j) => { asyncOp(r, j);
-                    }).then((result) => {
-                      $("h4#voter_balance").text(result);
-                      // window.location.reload(false); 
-                        //This will call if your algorithm succeeds!
+                        });
                     });
 
 
@@ -205,6 +217,8 @@
                           		$("p#body_paragraph").html(myString);
                           		$("h4#real_votes").text(data['1']);
                           		$("h4#fake_votes").text(data['2']);
+
+
                   
                           	});
                
@@ -277,6 +291,14 @@
 
 	</head>
 	<body class="is-preload">
+    
+        <section id="footer">
+        <ul class="icons">
+          <li><a href="http://127.0.0.1:5000/home" id="call_Home" class="button wide ">Home</a></li>
+          <li><a href="http://127.0.0.1:5000/submission" id="call_Submit" class="button wide">Submit</a></li>
+          <li><a href="http://127.0.0.1:5000/view" id="call_View" class="button wide">View</a></li>
+        </ul>
+    </section>
 		
 			<section id="four" class="main style2 special">
 				<div class="container">
@@ -287,8 +309,10 @@
 						<li><a href="#" id="call_VoteReal" class="button wide primary">REAL!!!</a></li>
 						<li><a href="#" id="call_VoteFake" class="button wide">FAKE!!!</a></li>
 						<li><a href="#" id="call_getDetails" class="button wide">Get Details</a></li>
+            
 					</ul>
 					<ul class="actions special">
+            <li><a href="#" id="call_RefreshBalance" class="button wide">Refresh Balance</a></li>
 						<li><h3> Voter Balance: </h2></li>
 						<li><h4 id="voter_balance"></h4></li>
 					</ul>

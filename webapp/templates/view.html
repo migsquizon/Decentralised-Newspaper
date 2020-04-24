@@ -1,0 +1,350 @@
+<!DOCTYPE HTML>
+<!--
+	Photon by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Photon by HTML5 UP</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="{{ url_for('static',filename='assets/css/main.css') }}" />
+		<noscript><link rel="stylesheet" href="{{ url_for('static',filename='assets/css/noscript.css') }}" /></noscript>
+		
+		<!-- Scripts -->
+			<script src="{{ url_for('static', filename='assets/js/web3-eth-abi.js')}}"></script>
+			<script src="{{ url_for('static', filename='assets/js/jquery.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/jquery.scrolly.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/browser.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/breakpoints.min.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/util.js') }}"></script>
+			<script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+			        <script lang="javascript">
+            var contract;
+
+            $(document).ready(function() {
+                if (typeof web3 !== 'undefined') {
+                    var sc_address = "{{contractAddress}}";
+                    var contractABI = web3.eth.contract(JSON.parse('{{contractABI | safe}}'));
+                    var contractInstance = contractABI.at(sc_address);
+                    contract = contractInstance;
+
+
+                //     var dict = [];
+
+                //     async function getHeadlines (len) {
+                //      	var ret;
+                //      	for(var i = 0; i < divs.length; i++){
+                //         contractInstance.getHeadlineFromIndex(i, {from:web3.eth.defaultAccount}, function(error, result){
+                //           if (error) {
+                //               alert("Please, connect to the network");
+                //               reject(error);
+                //           } else {
+                //           	 dict.push(result);
+                //           }           	
+                //         });
+                //     }
+                // }
+
+                   
+              
+
+                    //   function forloop (len,callback) {
+                    //   	var i = 1;
+                    //   	console.log(len)
+                    //   	var temp;
+                    //     getHeadlines(len);
+                    //     global dict;
+                    //     console.log(dict)
+
+                               	
+                    // }
+
+       
+                    //  $("a#call_GetTable").click(function(){
+                    //  	var length;
+                    //     contractInstance.getTotalNumberOfNews(function(error, result){
+                    //       if (error) {
+                    //           alert("Please, connect to the network");
+                    //           reject(error);
+                    //       } else {
+                    //           length = result['c'][0];
+                    //           console.log(length)
+                    //           console.log(forloop(length))
+
+
+                       
+                       
+
+                    //     }
+                    
+
+                            
+                    //       });
+                    
+                    // });
+
+
+                     $("a#call_RefreshBalance").click(function(){
+                        contractInstance.getVoterBalance(function(error, result){
+                          if (error) {
+                              alert("You are the publisher! or exception");
+                              reject(error);
+                          } else {
+                            $("h4#voter_balance").text(result);
+                         
+                          }
+                        });
+                    });
+
+
+                     $("a#call_GetHeadline").click(function(){
+                     	var i = $("input#index_headline").val();
+                        contractInstance.getHeadlineFromIndex(i, {from:web3.eth.defaultAccount},function(error, result){
+                          if (error) {
+                              alert("You are the publisher! or exception");
+                              reject(error);
+                          } else {
+                            $("h2#debug").text(result);
+                          }
+                        });
+                    });
+
+                        function waitForReceipt(hash, cb) {
+						  web3.eth.getTransactionReceipt(hash, function (err, receipt) {
+						    if (err) {
+						      error(err);
+						    }
+
+						    if (receipt !== null) {
+						      // Transaction went through
+						      if (cb) {
+						        cb(receipt);
+						      }
+						    } else {
+						      // Try again in 1 second
+						      window.setTimeout(function () {
+						        waitForReceipt(hash, cb);
+						      }, 1000);
+						    }
+						  });
+						} 
+
+                        $("a#call_GetSpecificNews").click(function(){
+                        var i = $("input#index_headline").val();
+                     	var r;
+                     	var call_data = contractInstance.getSpecificNewsDetails(i, {from:web3.eth.defaultAccount},function(error, result){
+                     		if (error) {
+                              alert("You are the publisher! or exception");
+                              reject(error);
+                          } else {
+                          	r = result
+                          	console.log(r)
+                          	waitForReceipt(r, function (receipt){
+                          		console.log(receipt)
+                          		var log = receipt.logs[0]
+                          		var data = Web3EthAbi.decodeParameters(['string','uint256','uint256'], log.data.replace("0x", ""));
+                          		console.log(data)
+                              var myString = data['0'];
+                              console.log(myString)
+                              myString = myString.replace(/(\r\n|\n|\r)/gm, "<br />");
+                          		$("p#body_paragraph").html(myString);
+                          		$("h4#real_votes").text(data['1']);
+                          		$("h4#fake_votes").text(data['2']);
+                  
+                          	});
+               
+                     }
+                     	});
+
+                     });
+
+                       
+                    
+
+                    $("a#call_GetTotalNews").click(function(){
+                        contractInstance.getTotalNumberOfNews(function(error, result){
+                          if (error) {
+                              alert("Please, connect to the network");
+                              reject(error);
+                          }
+                          else {
+                              $("h4#total_number").text(result);
+                          }
+                        });
+                    });
+                }
+                else {
+                    alert("Please, install Metamask!");
+                }
+            });
+
+
+        </script>
+
+
+	</head>
+	<body class="is-preload">
+
+
+		<section id="footer">
+				<ul class="icons">
+					<li><a href="http://127.0.0.1:5000/home" id="call_Home" class="button wide ">Home</a></li>
+					<li><a href="http://127.0.0.1:5000/submission" id="call_Submit" class="button wide">Submit</a></li>
+					<li><a href="http://127.0.0.1:5000/view" id="call_View" class="button wide">View</a></li>
+				</ul>
+		</section>
+
+
+		
+			<section id="four" class="main style2 special">
+				<div class="container">
+					<header class="major">
+						<h2 id="debug">View News!</h2>
+					<ul class="actions special">
+						<li><a href="#" id="call_GetHeadline" class="button wide ">Get Index Headline</a></li>
+						<li><a href="#" id="call_GetSpecificNews" class="button wide">Get Specified News Details</a></li>
+						&nbsp;
+						&nbsp;
+						<div class="col-6 col-12-xsmall">
+						<input type="text" class="major special" name="demo-name" id="index_headline" value="" placeholder="Index of Headline" />
+						</div>
+
+						
+					</ul>
+		
+
+					<ul class="actions special">
+						<li><a href="#" id="call_GetTotalNews" class="button wide">Get Total Number of News</a></li>
+						<li><h3> Total No. Of News: </h2></li>
+						&nbsp;
+						<li><h4 id="total_number"></h4></li>
+					</ul>
+				
+
+					<ul class="actions special">
+						<li><a href="#" id="call_RefreshBalance" class="button wide">Refresh Balance</a></li>
+						<li><h3> Voter Balance: </h2></li>
+						<li><h4 id="voter_balance"></h4></li>
+						
+					
+					</header>
+				</div>
+			</section>
+
+
+				<section id="two" class="main style1">
+				<div class="container">
+					<div class="row gtr-150">
+						<div class="col-6 col-12-medium">
+							<ul class="major-icons">
+								<li><span class="icon solid style1 major fa-code"></span></li>
+								<li><span class="icon solid style2 major fa-bolt"></span></li>
+								<li><span class="icon solid style3 major fa-camera-retro"></span></li>
+								<li><span class="icon solid style4 major fa-cog"></span></li>
+								<li><span class="icon solid style5 major fa-desktop"></span></li>
+								<li><span class="icon solid style6 major fa-calendar"></span></li>
+							</ul>
+						</div>
+						<div class="col-6 col-12-medium">
+							<header class="major">
+								<h2 id="current_headline">Pay to see details! (uses voter balance)</h2>
+							</header>
+							<ul class="actions special">
+							<li><h3>Total Real Votes: </h2></li>
+							<li><h4 id="real_votes"></h4></li>
+							<li><h3>Total Fake Votes: </h2></li>
+							<li><h4 id="fake_votes"></h4></li>
+							</ul>
+							<p id="body_paragraph">Adipiscing a commodo ante nunc accumsan interdum mi ante adipiscing. A nunc lobortis non nisl amet vis volutpat aclacus nascetur ac non. Lorem curae eu ante amet sapien in tempus ac. Adipiscing id accumsan adipiscing ipsum.</p>
+			
+						</div>
+					</div>
+				</div>
+			</section>
+
+
+		<!-- <section id="five" class="main style1">
+					<div class="container">
+						<h4>List of Headlines</h4>
+						
+						<div class="table-wrapper">
+							<table>
+								<thead>
+									<tr>
+										<th>Name</th>
+										<th>Description</th>
+						
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>Item One</td>
+										<td>Ante turpis integer aliquet porttitor.</td>
+									
+									</tr>
+									<tr>
+										<td>Item Two</td>
+										<td>Vis ac commodo adipiscing arcu aliquet.</td>
+									
+									</tr>
+									<tr>
+										<td>Item Three</td>
+										<td> Morbi faucibus arcu accumsan lorem.</td>
+									
+									</tr>
+									<tr>
+										<td>Item Four</td>
+										<td>Vitae integer tempus condimentum.</td>
+										
+									</tr>
+									<tr>
+										<td>Item Five</td>
+										<td>Ante turpis integer aliquet porttitor.</td>
+										
+									</tr>
+								</tbody>
+								<tfoot>
+								
+								</tfoot>
+							</table>
+						</div>
+					</div>
+			</section> -->
+
+
+		<!-- 	<section id="one" class="main style1">
+				<div class="container">
+					<div class="row gtr-150">
+						<div class="col-6 col-12-medium">
+						<input type="text" name="demo-name" id="headline" value="" placeholder="Headline" />
+						<input type="text" name="demo-name" id="body" value="" placeholder="Body" />
+						</div>
+						<div class="col-6 col-12-medium imp-medium">
+							<span class="image fit"><img src="{{ url_for('static',filename='images/pic01.jpg')}}" alt="" /></span>
+						</div>
+				</div>
+				</div>
+			</section>
+ -->
+
+	
+		<!-- Footer -->
+			<section id="footer">
+				<ul class="icons">
+					<li><a href="#" class="icon brands alt fa-twitter"><span class="label">Twitter</span></a></li>
+					<li><a href="#" class="icon brands alt fa-facebook-f"><span class="label">Facebook</span></a></li>
+					<li><a href="#" class="icon brands alt fa-instagram"><span class="label">Instagram</span></a></li>
+					<li><a href="#" class="icon brands alt fa-github"><span class="label">GitHub</span></a></li>
+					<li><a href="#" class="icon solid alt fa-envelope"><span class="label">Email</span></a></li>
+				</ul>
+				<ul class="copyright">
+					<li>&copy; Untitled</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+				</ul>
+			</section>
+
+	
+
+	</body>
+</html>

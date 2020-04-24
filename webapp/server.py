@@ -40,5 +40,10 @@ def submission():
 def home():
 	return render_template('home.html', contractAddress = lottery.address.lower(), contractABI = json.dumps(contract_interface['abi']))
 
+
+@app.route('/view')
+def view():
+	return render_template('view.html', contractAddress = lottery.address.lower(), contractABI = json.dumps(contract_interface['abi']))
+
 if __name__ == '__main__':
     app.run()

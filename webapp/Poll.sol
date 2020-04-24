@@ -94,7 +94,7 @@ contract Poll {
         return(metadata[indexOfNews].body,metadata[indexOfNews].real_votes,metadata[indexOfNews].fake_votes);
     }
     
-     function getSpecficNewsDetails(uint256 _index) public voterHasBalance returns(string,uint256,uint256) {
+     function getSpecificNewsDetails(uint256 _index) public voterHasBalance returns(string,uint256,uint256) {
         voter_balance[msg.sender] -= 1;
         emit Details(metadata[_index].body,metadata[_index].real_votes,metadata[_index].fake_votes,metadata[_index].publisher_address);
         return(metadata[_index].body,metadata[_index].real_votes,metadata[_index].fake_votes);
@@ -127,7 +127,7 @@ contract Poll {
         // ensure that this guy has voted.
         emit Voted(msg.sender,true);
         
-        if(totalVotes>=3){
+        if(totalVotes>=2){
             reset_poll();
         }
         
