@@ -126,7 +126,7 @@
                    //    // window.location.reload(false); 
                    //      //This will call if your algorithm succeeds!
                    //  });
-                    $("a#call_RefreshBalance").click(function(){
+                    $("a#call_RefreshVoterBalance").click(function(){
                         contractInstance.getVoterBalance(function(error, result){
                           if (error) {
                               alert("You are the publisher! or exception");
@@ -134,6 +134,29 @@
                           } else {
                             $("h4#voter_balance").text(result);
                          
+                          }
+                        });
+                    });
+
+                    $("a#call_RefreshPublisherBalance").click(function(){
+                        contractInstance.getPublisherBalance(function(error, result){
+                          if (error) {
+                              alert("You are the publisher! or exception");
+                              reject(error);
+                          } else {
+                            $("h4#publisher_balance").text(result);
+                         
+                          }
+                        });
+                    });
+
+                      $("a#call_claimReward").click(function(){
+                        var newNumber = $("input#claim_value").val();
+          
+                        contractInstance.claimReward(newNumber, {from:web3.eth.defaultAccount}, function(error, result){
+                          if (error) {
+                              alert("Please, connect to the network");
+                              reject(error);
                           }
                         });
                     });
@@ -308,16 +331,30 @@
 					<ul class="actions special">
 						<li><a href="#" id="call_VoteReal" class="button wide primary">REAL!!!</a></li>
 						<li><a href="#" id="call_VoteFake" class="button wide">FAKE!!!</a></li>
-						<li><a href="#" id="call_getDetails" class="button wide">Get Details</a></li>
+					
             
 					</ul>
 					<ul class="actions special">
-            <li><a href="#" id="call_RefreshBalance" class="button wide">Refresh Balance</a></li>
+            <li><a href="#" id="call_getDetails" class="button wide">Get Details</a></li>
+            <li><a href="#" id="call_RefreshVoterBalance" class="button wide">Refresh Voter Balance</a></li>
 						<li><h3> Voter Balance: </h2></li>
 						<li><h4 id="voter_balance"></h4></li>
 					</ul>
+          <ul class="actions special">            
+         
+            <li><a href="#" id="call_RefreshPublisherBalance" class="button wide">Refresh Publisher Balance</a></li>
+            <li><h3> Publisher Balance: </h2></li>
+            <li><h4 id="publisher_balance"></h4></li>
+          </ul>
+          <ul class="actions special">            
+            <li><a href="#" id="call_claimReward" class="button wide">Claim Reward</a></li>
+            &nbsp;
+            &nbsp;
+            <a></a>
+            <input type="text" name="demo-name" id="claim_value" value="" placeholder="Deposit Value" />
+          </ul>
           <ul class="actions special">
-            <li><a href="#" id="call_deposit" class="button wide primary">Deposit</a></li>
+            <li><a href="#" id="call_deposit" class="button wide">Deposit</a></li>
             <a></a>
             <input type="text" name="demo-name" id="deposit_value" value="" placeholder="Deposit Value" />
             <li><a href="#" id="call_withdraw" class="button wide">Withdraw</a></li>
