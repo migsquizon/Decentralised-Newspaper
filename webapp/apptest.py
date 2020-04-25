@@ -71,17 +71,21 @@ def test_owner(eth_tester,foo_contract):
 def test_submit_headline_success(eth_tester, foo_contract,w3):
     tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[1]})
     w3.eth.waitForTransactionReceipt(tx_hash, 180)
-
     hw = foo_contract.caller.getCurrentHeadline()
+
+    ## assert if headline is submitted
     assert hw == "asdasd"
 
 def test_submit_headline_fail_cause_poll_is_ongoing(eth_tester, foo_contract,w3):
+
+    ## fails because poll is still ongoing
+
+    tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[1]})
+    w3.eth.waitForTransactionReceipt(tx_hash, 180)
+
     with pytest.raises(Exception) as e_info:
         tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[1]})
         w3.eth.waitForTransactionReceipt(tx_hash, 180)
-        tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[1]})
-        w3.eth.waitForTransactionReceipt(tx_hash, 180)
-
         hw = foo_contract.caller.getCurrentHeadline()
         assert hw == "asdasd"
 
@@ -157,13 +161,12 @@ def test_successful_vote_and_that_voter_is_rewarded_with_vote_balance(eth_tester
 
 
 def test_failed_vote_because_msg_value_insufficient(eth_tester,w3, foo_contract):
+    tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
+    w3.eth.waitForTransactionReceipt(tx_hash, 180)
+    hw = foo_contract.caller.getCurrentHeadline()
+    assert hw == "asdasd"
+
     with pytest.raises(Exception) as e_info:
-        tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
-        w3.eth.waitForTransactionReceipt(tx_hash, 180)
-        hw = foo_contract.caller.getCurrentHeadline()
-        assert hw == "asdasd"
-
-
         tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[1],'value':w3.toWei(0.001, 'ether')})
         receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
         hw = foo_contract.functions.getVoterBalance().call({'from': eth_tester.get_accounts()[1]})
@@ -171,7 +174,8 @@ def test_failed_vote_because_msg_value_insufficient(eth_tester,w3, foo_contract)
         assert hw == 0
 
 
-def test_successful_vote_and_that_publisher_is_rewarded_with_ether(eth_tester,w3, foo_contract):
+
+def test_successful_poll_ending_and_that_publisher_balance_is_credited_because_real_news(eth_tester,w3, foo_contract):
     # send transaction that votes
     tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
     w3.eth.waitForTransactionReceipt(tx_hash, 180)
@@ -191,18 +195,11 @@ def test_successful_vote_and_that_publisher_is_rewarded_with_ether(eth_tester,w3
     hw = foo_contract.functions.getVoterBalance().call({'from': eth_tester.get_accounts()[3]})
     assert hw == 1
 
+    ## Check if publisher balance is credited so he can claim
+    hw = foo_contract.functions.getPublisherBalance().call({'from': eth_tester.get_accounts()[2]})
+    assert hw == 2
 
-    tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[4],'value':w3.toWei(1, 'ether')})
-    receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
-    hw = foo_contract.functions.getVoterBalance().call({'from': eth_tester.get_accounts()[4]})
-    assert hw == 1
-
-    ## checks if balance is added
-    assert balance == (eth_tester.get_balance(eth_tester.get_accounts()[2])-w3.toWei(2,'ether'))
-
-
-
-def test_successful_poll_ending_and_that_publisher_is_rewarded_with_ether_because_real_news(eth_tester,w3, foo_contract):
+def test_successful_poll_ending_and_that_publisher_balance_is_NOT_credited_because_fake_news(eth_tester,w3, foo_contract):
     # send transaction that votes
     tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
     w3.eth.waitForTransactionReceipt(tx_hash, 180)
@@ -217,30 +214,23 @@ def test_successful_poll_ending_and_that_publisher_is_rewarded_with_ether_becaus
     hw = foo_contract.functions.getVoterBalance().call({'from': eth_tester.get_accounts()[1]})
     assert hw == 1
 
-    tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[3],'value':w3.toWei(1, 'ether')})
+    tx_hash = foo_contract.functions.Vote(False).transact({'from': eth_tester.get_accounts()[3],'value':w3.toWei(1, 'ether')})
     receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
     hw = foo_contract.functions.getVoterBalance().call({'from': eth_tester.get_accounts()[3]})
     assert hw == 1
 
+    ## Check if publisher balance is credited so he can claim
+    hw = foo_contract.functions.getPublisherBalance().call({'from': eth_tester.get_accounts()[2]})
+    assert hw == 0
 
-    tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[4],'value':w3.toWei(1, 'ether')})
-    receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
-    hw = foo_contract.functions.getVoterBalance().call({'from': eth_tester.get_accounts()[4]})
-    assert hw == 1
-
-    ## checks if balance is added
-    assert balance == (eth_tester.get_balance(eth_tester.get_accounts()[2])-w3.toWei(2,'ether'))
-
-
-def test_successful_poll_ending_and_that_publisher_is_rewarded_with_ether_and_submit_headline_again(eth_tester,w3, foo_contract):
+def test_successful_poll_ending_and_that_publisher_balance_credited_and_claim_successful(eth_tester,w3, foo_contract):
     # send transaction that votes
     tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
     w3.eth.waitForTransactionReceipt(tx_hash, 180)
     hw = foo_contract.caller.getCurrentHeadline()
+
+
     assert hw == "asdasd"
-
-    balance = eth_tester.get_balance(eth_tester.get_accounts()[2])
-
 
 
     tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[1],'value':w3.toWei(1, 'ether')})
@@ -253,31 +243,26 @@ def test_successful_poll_ending_and_that_publisher_is_rewarded_with_ether_and_su
     hw = foo_contract.functions.getVoterBalance().call({'from': eth_tester.get_accounts()[3]})
     assert hw == 1
 
+    ## Check if publisher balance is credited so he can claim
+    hw = foo_contract.functions.getPublisherBalance().call({'from': eth_tester.get_accounts()[2]})
+    assert hw == 2
 
-    tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[4],'value':w3.toWei(1, 'ether')})
+    balance = eth_tester.get_balance(eth_tester.get_accounts()[2])
+    tx_hash = foo_contract.functions.claimReward(2).transact({'from': eth_tester.get_accounts()[2]})
     receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
-    hw = foo_contract.functions.getVoterBalance().call({'from': eth_tester.get_accounts()[4]})
-    assert hw == 1
+    # checks if balance is added
+    assert balance < (eth_tester.get_balance(eth_tester.get_accounts()[2]))
 
-    ## checks if balance is added
-    assert balance == (eth_tester.get_balance(eth_tester.get_accounts()[2])-w3.toWei(2,'ether'))
-
-    tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
-    w3.eth.waitForTransactionReceipt(tx_hash, 180)
-    hw = foo_contract.caller.getCurrentHeadline()
-
-    assert hw == "asdasd"
+    hw = foo_contract.functions.getPublisherBalance().call({'from': eth_tester.get_accounts()[2]})
+    assert hw == 0
 
 
-def test_successful_poll_ending_and_that_publisher_is_NOT_rewarded_because_fake_news(eth_tester,w3, foo_contract):
+def test_successful_poll_ending_and_that_publisher_balance_is_not_credited_because_fake_and_claim_fail_cause_no_balance(eth_tester,w3, foo_contract):
     # send transaction that votes
     tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
     w3.eth.waitForTransactionReceipt(tx_hash, 180)
     hw = foo_contract.caller.getCurrentHeadline()
     assert hw == "asdasd"
-
-    balance = eth_tester.get_balance(eth_tester.get_accounts()[2])
-
 
 
     tx_hash = foo_contract.functions.Vote(False).transact({'from': eth_tester.get_accounts()[1],'value':w3.toWei(1, 'ether')})
@@ -290,26 +275,26 @@ def test_successful_poll_ending_and_that_publisher_is_NOT_rewarded_because_fake_
     hw = foo_contract.functions.getVoterBalance().call({'from': eth_tester.get_accounts()[3]})
     assert hw == 1
 
+    ## Check if publisher balance is credited so he can claim
+    hw = foo_contract.functions.getPublisherBalance().call({'from': eth_tester.get_accounts()[2]})
+    assert hw == 0
 
-    tx_hash = foo_contract.functions.Vote(False).transact({'from': eth_tester.get_accounts()[4],'value':w3.toWei(1, 'ether')})
-    receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
-    hw = foo_contract.functions.getVoterBalance().call({'from': eth_tester.get_accounts()[4]})
-    assert hw == 1
-
-    ## checks if balance is added
-    assert balance == eth_tester.get_balance(eth_tester.get_accounts()[2])
-
+    balance = eth_tester.get_balance(eth_tester.get_accounts()[2])
+    with pytest.raises(Exception) as e_info:
+        tx_hash = foo_contract.functions.claimReward(2).transact({'from': eth_tester.get_accounts()[2]})
+        receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
+        # checks if balance is added
+        assert balance < (eth_tester.get_balance(eth_tester.get_accounts()[2]))
 
 
-def test_successful_poll_ending_and_that_publisher_is_rewarded_and_poll_reset_with_empty_headline(eth_tester,w3, foo_contract):
+def test_successful_poll_ending_and_that_publisher_balance_is_credited_then_submit_new_headline_again(eth_tester,w3, foo_contract):
     # send transaction that votes
     tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
     w3.eth.waitForTransactionReceipt(tx_hash, 180)
     hw = foo_contract.caller.getCurrentHeadline()
-    assert hw == "asdasd"
 
     balance = eth_tester.get_balance(eth_tester.get_accounts()[2])
-
+    assert hw == "asdasd"
 
 
     tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[1],'value':w3.toWei(1, 'ether')})
@@ -322,14 +307,40 @@ def test_successful_poll_ending_and_that_publisher_is_rewarded_and_poll_reset_wi
     hw = foo_contract.functions.getVoterBalance().call({'from': eth_tester.get_accounts()[3]})
     assert hw == 1
 
+    ## Check if publisher balance is credited so he can claim
+    hw = foo_contract.functions.getPublisherBalance().call({'from': eth_tester.get_accounts()[2]})
 
-    tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[4],'value':w3.toWei(1, 'ether')})
+    tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
+    w3.eth.waitForTransactionReceipt(tx_hash, 180)
+    hw = foo_contract.caller.getCurrentHeadline()
+
+    assert hw == "asdasd"
+
+
+
+
+def test_successful_poll_ending_and_that_publisher_is_rewarded_and_poll_reset_with_empty_headline(eth_tester,w3, foo_contract):
+    # send transaction that votes
+    tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
+    w3.eth.waitForTransactionReceipt(tx_hash, 180)
+    hw = foo_contract.caller.getCurrentHeadline()
+
+    balance = eth_tester.get_balance(eth_tester.get_accounts()[2])
+    assert hw == "asdasd"
+
+
+    tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[1],'value':w3.toWei(1, 'ether')})
     receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
-    hw = foo_contract.functions.getVoterBalance().call({'from': eth_tester.get_accounts()[4]})
+    hw = foo_contract.functions.getVoterBalance().call({'from': eth_tester.get_accounts()[1]})
     assert hw == 1
 
-    ## checks if balance is added
-    assert balance == (eth_tester.get_balance(eth_tester.get_accounts()[2])-w3.toWei(2,'ether'))
+    tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[3],'value':w3.toWei(1, 'ether')})
+    receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
+    hw = foo_contract.functions.getVoterBalance().call({'from': eth_tester.get_accounts()[3]})
+    assert hw == 1
+
+    ## Check if publisher balance is credited so he can claim
+    hw = foo_contract.functions.getPublisherBalance().call({'from': eth_tester.get_accounts()[2]})
 
     hw = foo_contract.caller.getCurrentHeadline()
 

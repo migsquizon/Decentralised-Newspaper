@@ -21,6 +21,7 @@ contract Poll {
     mapping(uint256=>News) metadata;
     mapping(address=>uint256) voter_balance;
     uint256 totalVotes;
+    mapping(address=>uint256) publisher_rewards;
     
     event Voted(address voter,bool voted);
     event Details(string body,uint256 real, uint256 fake, address pubisher);
@@ -54,6 +55,8 @@ contract Poll {
         _;
     }
     
+    
+    // Owner Function
     function deposit() public payable onlyOwner{
         
     }
@@ -88,6 +91,10 @@ contract Poll {
         return(news_station);
     }
     
+    function getPublisherBalance() public view returns(uint256){
+        return(publisher_rewards[msg.sender]);
+    }
+    
     function getCurrentNewsDetails() public voterHasBalance returns(string,uint256,uint256) {
         voter_balance[msg.sender] -= 1;
         emit Details(metadata[indexOfNews].body,metadata[indexOfNews].real_votes,metadata[indexOfNews].fake_votes,metadata[indexOfNews].publisher_address);
@@ -109,6 +116,14 @@ contract Poll {
         metadata[indexOfNews].publisher_address = msg.sender;
         // if(real_headlines.length)
         // real and fake votes already instantiated to 0
+    }
+    
+    function claimReward(uint256 _value) public {
+        require(_value<=publisher_rewards[msg.sender]);
+        publisher_rewards[msg.sender] -= _value;
+        msg.sender.transfer(_value*(1 ether));
+        
+        
     }
     
     
@@ -136,7 +151,9 @@ contract Poll {
     function reset_poll() internal {
         if((metadata[indexOfNews].real_votes/totalVotes) * 100 >= 60 ){
             real_headlines.push(indexOfNews);
-            metadata[indexOfNews].publisher_address.transfer(2 ether);
+            // metadata[indexOfNews].publisher_address.transfer(2 ether);
+            publisher_rewards[metadata[indexOfNews].publisher_address] += 2;
+            
         }
         
         // kind of compensates the gas cause they pay for reset
