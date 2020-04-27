@@ -130,13 +130,6 @@ def test_failed_vote_because_poll_is_empty(eth_tester,w3, foo_contract):
         receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
 
 
-def test_failed_vote_because_value_sent_is_less_than_fees_required(eth_tester,w3, foo_contract):
-    with pytest.raises(Exception) as e_info:
-        tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
-        w3.eth.waitForTransactionReceipt(tx_hash, 180)
-        tx_hash = foo_contract.functions.Vote(True).transact({'from': eth_tester.get_accounts()[1],'value':w3.toWei(0.001, 'ether')})
-        receipt = w3.eth.waitForTransactionReceipt(tx_hash, 180)
-
 
 def test_successful_vote_and_that_voter_is_rewarded_with_vote_balance(eth_tester,w3, foo_contract):
     # send transaction that votes
@@ -257,7 +250,7 @@ def test_successful_poll_ending_and_that_publisher_balance_credited_and_claim_su
     assert hw == 0
 
 
-def test_successful_poll_ending_and_that_publisher_balance_is_not_credited_because_fake_and_claim_fail_cause_no_balance(eth_tester,w3, foo_contract):
+def test_failure_successful_poll_ending_and_that_publisher_balance_is_not_credited_because_fake_and_claim_fail_cause_no_balance(eth_tester,w3, foo_contract):
     # send transaction that votes
     tx_hash = foo_contract.functions.submitHeadline("asdasd","asdasd").transact({'from': eth_tester.get_accounts()[2]})
     w3.eth.waitForTransactionReceipt(tx_hash, 180)
